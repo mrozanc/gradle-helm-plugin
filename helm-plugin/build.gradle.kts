@@ -25,26 +25,15 @@ dependencies {
 
 
 gradlePlugin {
-
     plugins {
         create("helmCommandsPlugin") {
-            id = "org.unbroken-dome.helm-commands"
+            id = "org.salgar.helm-commands"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.command.HelmCommandsPlugin"
-        }
-        create("helmPlugin") {
-            id = "org.unbroken-dome.helm"
-            implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
-        }
-    }
-}
-
-
-pluginBundle {
-    (plugins) {
-        "helmCommandsPlugin" {
             displayName = "Helm Commands plugin"
         }
-        "helmPlugin" {
+        create("helmPlugin") {
+            id = "org.salgar.helm"
+            implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
             displayName = "Helm plugin"
         }
     }

@@ -8,7 +8,6 @@ plugins {
 
 
 dependencies {
-
     implementation(project(":helm-plugin"))
 
     implementation("com.squareup.okhttp3:okhttp:4.9.0") {
@@ -27,19 +26,10 @@ dependencies {
 
 
 gradlePlugin {
-
     plugins {
         create("helmPublishPlugin") {
-            id = "org.unbroken-dome.helm-publish"
+            id = "org.salgar.helm-publish"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.publishing.HelmPublishPlugin"
-        }
-    }
-}
-
-
-pluginBundle {
-    (plugins) {
-        "helmPublishPlugin" {
             displayName = "Helm Publish Plugin"
         }
     }

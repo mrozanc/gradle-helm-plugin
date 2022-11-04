@@ -28,12 +28,7 @@ data class HelmValueOptionsHolder(
     constructor(objects: ObjectFactory, layout: ProjectLayout) : this(
         values = objects.mapProperty(),
         fileValues = objects.mapProperty(),
-        valueFiles = if (GradleVersion.current() >= GradleVersions.Version_5_3) {
-            objects.fileCollection()
-        } else {
-            @Suppress("DEPRECATION")
-            layout.configurableFiles()
-        }
+        valueFiles = objects.fileCollection()
     )
 }
 

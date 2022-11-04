@@ -207,14 +207,7 @@ abstract class AbstractHelmInstallationCommandTask :
      * Not to be confused with [fileValues], which contains entries whose values are the contents of files.
      */
     @get:InputFiles
-    final override val valueFiles: ConfigurableFileCollection =
-        if (GradleVersion.current() >= GradleVersions.Version_5_3) {
-            project.objects.fileCollection()
-        } else {
-            @Suppress("DEPRECATION")
-            project.layout.configurableFiles()
-        }
-
+    final override val valueFiles: ConfigurableFileCollection = project.objects.fileCollection()
 
     /**
      * If `true`, verify the package before installing it.

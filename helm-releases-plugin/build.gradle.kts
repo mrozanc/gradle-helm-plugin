@@ -20,16 +20,8 @@ gradlePlugin {
 
     plugins {
         create("helmReleasesPlugin") {
-            id = "org.unbroken-dome.helm-releases"
+            id = "org.salgar.helm-releases"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.release.HelmReleasesPlugin"
-        }
-    }
-}
-
-
-pluginBundle {
-    (plugins) {
-        "helmReleasesPlugin" {
             displayName = "Helm Releases Plugin"
         }
     }
