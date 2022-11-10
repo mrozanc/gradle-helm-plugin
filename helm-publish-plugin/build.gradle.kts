@@ -28,7 +28,7 @@ dependencies {
 gradlePlugin {
     plugins {
         create("helmPublishPlugin") {
-            id = "org.salgar.helm-publish"
+            id = "io.github.mehmetsalgar.helm-publish"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.publishing.HelmPublishPlugin"
             displayName = "Helm Publish Plugin"
         }

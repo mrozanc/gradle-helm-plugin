@@ -27,12 +27,12 @@ dependencies {
 gradlePlugin {
     plugins {
         create("helmCommandsPlugin") {
-            id = "org.salgar.helm-commands"
+            id = "io.github.mehmetsalgar.helm-commands"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.command.HelmCommandsPlugin"
             displayName = "Helm Commands plugin"
         }
         create("helmPlugin") {
-            id = "org.salgar.helm"
+            id = "io.github.mehmetsalgar.helm"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
             displayName = "Helm plugin"
         }
