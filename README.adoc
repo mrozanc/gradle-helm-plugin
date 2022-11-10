@@ -7,6 +7,7 @@ ifdef::env-github[]
 endif::[]
 
 = Gradle Helm Plugin
+
 This plugin is seen here is a Fork of 'org.unbroken-dome.helm', it seems its main contributor  at the moment is not
 active and personally had to make a feature implementation, I had to fork and publish, but original repository has the PR.
 
