@@ -96,6 +96,14 @@ open class HelmAddRepository : AbstractHelmCommandTask() {
 
     @TaskAction
     fun addRepository() {
+        if(url.toString().indexOf("oci://") < 0) {
+            add()
+        } else {
+            login()
+        }
+    }
+
+    private fun add() {
         execHelm("repo", "add") {
             option("--ca-file", caFile)
             option("--cert-file", certificateFile)
@@ -105,6 +113,17 @@ open class HelmAddRepository : AbstractHelmCommandTask() {
             flag("--no-update", failIfExists)
             args(repositoryName)
             args(url)
+        }
+    }
+
+    private fun login() {
+        val urlString = url.toString()
+        val shortUrl = urlString.substring(urlString.indexOf("oci://"), urlString.length)
+        execHelm("registry", "login") {
+            option("--username", username)
+            option("--password", password)
+            args(repositoryName)
+            args(shortUrl)
         }
     }
 
