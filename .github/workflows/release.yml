@@ -33,8 +33,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          # uses .java-version file which should be the current LTS
-          #          java-version: ${{ matrix.jdk-version }}
+          java-version-file: .java-version
           cache: 'gradle'
 
       - name: Publish Gradle Plugin
