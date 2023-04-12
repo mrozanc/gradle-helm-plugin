@@ -21,7 +21,7 @@ jobs:
           command: 'publish'
           #          dryRun: 'true' # remove this when you're sure
           #          changelogPath: 'CHANGELOG.md'
-          stateFile: '.nyx-state.json'
+      #          stateFile: '.nyx-state.json'
 
       - name: Publish Gradle Plugin
         env:

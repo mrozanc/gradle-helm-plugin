@@ -3,5 +3,5 @@ preset: simple
 services:
   github:
     type: "GITHUB"
-resume: true
-stateFile: ".nyx-state.json"
+#resume: true
+#stateFile: ".nyx-state.json"
