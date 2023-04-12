@@ -32,8 +32,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
+          distribution: 'liberica'
           # uses .java-version file which should be the current LTS
-          #          distribution: ${{ matrix.distribution }}
           #          java-version: ${{ matrix.jdk-version }}
           cache: 'gradle'
 
