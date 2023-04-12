@@ -1,0 +1,39 @@
+name: Build and test
+
+on:
+  push:
+    branches:
+      - main
+      - 'releases/**'
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        distribution: [ 'liberica' ]
+        jdk-version: [ 11, 17 ]
+        gradle-version: [ current, release-candidate, wrapper ]
+    runs-on: ubuntu-latest
+    name: Build and test project
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.jdk-version }}
+
+      - name: Build project
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ matrix.gradle-version }}
+          arguments: build
+
+      - name: Test project
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ matrix.gradle-version }}
+          arguments: check
