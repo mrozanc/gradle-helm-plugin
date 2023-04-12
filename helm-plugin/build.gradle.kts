@@ -8,10 +8,12 @@ plugins {
 
 
 dependencies {
-
+    // @OUTDATED: latest version 2.1 https://bitbucket.org/snakeyaml/snakeyaml/wiki/Changes
     implementation("org.yaml:snakeyaml:1.27")
+    // @REFACTOR: ? from 20200518 to this version - huge!
     implementation("org.json:json:20200518")
 
+    // @REFACTOR
     implementation("org.unbroken-dome.gradle-plugin-utils:gradle-plugin-utils:0.5.0")
 
     testImplementation("com.jayway.jsonpath:json-path:2.4.0")
@@ -20,29 +22,9 @@ dependencies {
 
     testImplementation("com.squareup.okhttp3:mockwebserver:4.9.0")
 
-    testImplementation("org.unbroken-dome.gradle-plugin-utils:gradle-plugin-test-utils:0.5.0")
-}
-/*
-dependencies {
-
-    // @OUTDATED: latest version 2.1 https://bitbucket.org/snakeyaml/snakeyaml/wiki/Changes
-    implementation("org.yaml:snakeyaml:1.33")
-    // @REFACTOR: ? from 20200518 to this version - huge!
-    implementation("org.json:json:20230227")
-
-    // @REFACTOR
-    implementation("org.unbroken-dome.gradle-plugin-utils:gradle-plugin-utils:0.5.0")
-
-    testImplementation("com.jayway.jsonpath:json-path:2.8.0")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.5")
-    testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.5")
-
-    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.3")
-
     // @REFACTOR
     testImplementation("org.unbroken-dome.gradle-plugin-utils:gradle-plugin-test-utils:0.5.0")
 }
- */
 
 gradlePlugin {
     plugins {
