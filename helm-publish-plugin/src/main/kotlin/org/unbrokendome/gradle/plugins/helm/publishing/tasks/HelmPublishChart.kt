@@ -8,7 +8,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.util.GradleVersion
-import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
@@ -105,11 +104,11 @@ open class HelmPublishChart
                 publisherParams = publisherParams
             )
 
-            @Suppress("DEPRECATION")
-            workerExecutor.submit(PublishChartWorker::class.java) { config ->
-                config.isolationMode = IsolationMode.NONE
-                config.setParams(params)
-            }
+//            @Suppress("DEPRECATION")
+//            workerExecutor.submit(PublishChartWorker::class.java) { config ->
+//                config.isolationMode = IsolationMode.NONE
+//                config.setParams(params)
+//            }
         }
     }
 }

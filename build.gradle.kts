@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") apply false
-    id("com.gradle.plugin-publish") version "1.0.0" apply false
+    id("com.gradle.plugin-publish") version "1.1.0" apply false
     id("org.jetbrains.dokka") version "1.7.20"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
 }
@@ -11,7 +11,6 @@ allprojects {
         mavenCentral()
     }
 }
-
 
 subprojects {
 
@@ -52,7 +51,7 @@ subprojects {
         }
 
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions.jvmTarget = System.getenv("JDK_VERSION") ?: JavaVersion.VERSION_17.toString()
             kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=enable")
         }
 
@@ -128,20 +127,20 @@ subprojects {
 
         val githubUrl = project.extra["github.url"] as String
 
-        with(the<com.gradle.publish.PluginBundleExtension>()) {
+        with(the<GradlePluginDevelopmentExtension>()) {
 
-            website = githubUrl
-            vcsUrl = githubUrl
-            description = "A suite of Gradle plugins for building, publishing and managing Helm charts."
-            tags = listOf("helm")
+            website.set(githubUrl)
+            vcsUrl.set(githubUrl)
+            description =
+                "Helm-NG is a suite of Gradle plugins for building, publishing and managing Helm charts which works with newer Gradle versions."
         }
     }
 }
 
-
 val asciidoctorExt: Configuration by configurations.creating
 
 dependencies {
+    // @OUTDATED
     asciidoctorExt("com.bmuschko:asciidoctorj-tabbed-code-extension:0.3")
 }
 

@@ -1,7 +1,7 @@
 package org.unbrokendome.gradle.plugins.helm.rules
 
 import org.gradle.api.NamedDomainObjectContainer
-import org.gradle.api.internal.plugins.AbstractRule
+import org.gradle.api.Rule
 import org.unbrokendome.gradle.plugins.helm.dsl.HelmRendering
 
 
@@ -10,7 +10,7 @@ import org.unbrokendome.gradle.plugins.helm.dsl.HelmRendering
  */
 internal class DefaultRenderingRule(
     private val renderings: NamedDomainObjectContainer<HelmRendering>
-) : AbstractRule() {
+) : Rule {
 
     override fun getDescription(): String {
         return "default rendering"

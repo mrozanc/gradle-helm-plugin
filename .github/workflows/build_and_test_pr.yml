@@ -14,6 +14,8 @@ jobs:
         distribution: [ 'liberica' ]
         jdk-version: [ 11, 17 ]
         gradle-version: [ current, release-candidate, wrapper ]
+    env:
+      JDK_VERSION: ${{ matrix.jdk-version }}
     runs-on: ubuntu-latest
     name: Build and test project
     steps:
