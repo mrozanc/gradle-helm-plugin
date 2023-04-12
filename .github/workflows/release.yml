@@ -3,8 +3,8 @@ name: Publishing a version using Nyx
 on: workflow_dispatch
 
 jobs:
-  infer-version:
-    name: Publish a version with Nyx (if needed)
+  publish-github:
+    name: Publish GitHub release
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
@@ -22,7 +22,10 @@ jobs:
           #          dryRun: 'true' # remove this when you're sure
           #          changelogPath: 'CHANGELOG.md'
       #          stateFile: '.nyx-state.json'
-
+  publish-gradle_portal:
+    name: Publish plugin
+    runs-on: ubuntu-latest
+    steps:
       - name: Publish Gradle Plugin
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
