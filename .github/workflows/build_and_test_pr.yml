@@ -27,6 +27,7 @@ jobs:
         with:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.jdk-version }}
+          cache: 'gradle'
 
       - name: Build project
         uses: gradle/gradle-build-action@v2

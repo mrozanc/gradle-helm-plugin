@@ -26,6 +26,17 @@ jobs:
     name: Publish plugin
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          # uses .java-version file which should be the current LTS
+          #          distribution: ${{ matrix.distribution }}
+          #          java-version: ${{ matrix.jdk-version }}
+          cache: 'gradle'
+
       - name: Publish Gradle Plugin
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
