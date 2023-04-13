@@ -16,6 +16,22 @@ releaseAssets:
     description: "helm-releases-plugin {{version}}"
     type: "application/octet-stream"
     path: "helm-releases-plugin/build/libs/"
+commitMessageConventions:
+  enabled:
+    - conventionalCommits
+  items:
+    conventionalCommits:
+      expression: "(?m)^(?<type>[a-zA-Z0-9_]+)(!)?(\\((?<scope>[a-z ]+)\\))?:( (?<title>.+))$(?s).*"
+      bumpExpressions:
+        major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
+        minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
+        patch: "(?s)(?m)^fix(?!!|.*^(BREAKING( |-)CHANGE: )).*"
+git:
+  remotes:
+    origin:
+      authenticationMethod: USER_PASSWORD
+      user: "{{#environmentVariable}}GH_TOKEN{{/environmentVariable}}"
+      password: ""
 changelog:
   path: "build/CHANGELOG.md"
   template: ".github/CHANGELOG.tpl"
@@ -27,7 +43,6 @@ changelog:
 releaseTypes:
   publicationServices:
     - github
-
 services:
   github:
     type: "GITHUB"
