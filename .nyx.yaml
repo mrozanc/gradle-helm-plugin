@@ -1,5 +1,33 @@
 ---
 preset: simple
+releaseAssets:
+  helm-plugin:
+    fileName: "helm-plugin"
+    description: "helm-publish-plugin {{version}}"
+    type: "application/octet-stream"
+    path: "helm-plugin/build/libs/"
+  helm-publish-plugin:
+    fileName: "helm-publish-plugin"
+    description: "helm-publish-plugin {{version}}"
+    type: "application/octet-stream"
+    path: "helm-publish-plugin/build/libs/"
+  helm-releases-plugin:
+    fileName: "helm-releases-plugin"
+    description: "helm-releases-plugin {{version}}"
+    type: "application/octet-stream"
+    path: "helm-releases-plugin/build/libs/"
+changelog:
+  path: "build/CHANGELOG.md"
+  template: ".github/CHANGELOG.tpl"
+  sections:
+    "Added": "^feat$"
+    "Fixed": "^fix$"
+  substitutions:
+    "(?m)#([0-9]+)(?s)": "[#%s](https://github.com/mehmetsalgar/gradle-helm-plugin/issues/%s)"
+releaseTypes:
+  publicationServices:
+    - github
+
 services:
   github:
     type: "GITHUB"
@@ -11,5 +39,5 @@ services:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}GH_TOKEN{{/environmentVariable}}"
       REPOSITORY_NAME: "gradle-helmng-plugin"
       REPOSITORY_OWNER: "bullshit"
-#resume: true
-#stateFile: ".nyx-state.json"
+resume: true
+stateFile: "build/.nyx-state.yml"
