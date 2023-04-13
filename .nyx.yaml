@@ -70,17 +70,12 @@ releaseTypes:
       gitPush: "false"
       gitTag: "false"
       identifiers:
-        - position: BUILD
-          qualifier: branch
-          value: ""
-        - position: BUILD
-          qualifier: commit
-          value: ""
-        - position: BUILD
-          qualifier: user
-          value: ""
-        - position: BUILD
-          qualifier: timestamp
+        - qualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+          position: "BUILD"
+        - qualifier: "{{#short5}}{{releaseScope.finalCommit}}{{/short5}}"
+          position: "BUILD"
+        - qualifier: "{{#timestampYYYYMMDDHHMMSS}}{{timestamp}}{{/timestampYYYYMMDDHHMMSS}}"
+          position: "BUILD"
           value: ""
       publish: "false"
       versionRangeFromBranchName: false
