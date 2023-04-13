@@ -41,8 +41,52 @@ changelog:
   substitutions:
     "(?m)#([0-9]+)(?s)": "[#%s](https://github.com/mehmetsalgar/gradle-helm-plugin/issues/%s)"
 releaseTypes:
+  enabled:
+    - mainline
+    - internal
   publicationServices:
     - github
+  items:
+    mainline:
+      collapseVersions: false
+      filterTags: "^()?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "true"
+      gitCommitMessage: "Release version "
+      gitPush: "true"
+      gitTag: "true"
+      gitTagMessage: "Tag release "
+      matchBranches: "^(master|main)$"
+      matchEnvironmentVariables:
+        CI: "^true$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+      versionRangeFromBranchName: false
+    internal:
+      collapseVersions: false
+      collapsedVersionQualifier: "internal"
+      description: "Internal release "
+      filterTags: "^()?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "false"
+      gitPush: "false"
+      gitTag: "false"
+      identifiers:
+        - position: BUILD
+          qualifier: branch
+          value: ""
+        - position: BUILD
+          qualifier: commit
+          value: ""
+        - position: BUILD
+          qualifier: user
+          value: ""
+        - position: BUILD
+          qualifier: timestamp
+          value: ""
+      publish: "false"
+      versionRangeFromBranchName: false
+scheme: "SEMVER"
+releaseLenient: true
+releasePrefix: ""
 services:
   github:
     type: "GITHUB"
@@ -56,3 +100,4 @@ services:
       REPOSITORY_OWNER: "bullshit"
 resume: true
 stateFile: "build/.nyx-state.yml"
+verbosity: DEBUG
