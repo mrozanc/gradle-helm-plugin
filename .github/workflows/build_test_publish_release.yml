@@ -33,11 +33,6 @@
 # - the SonarCloud cache (using key sonar-${{ github.run_id }}-[JOB_ID])
 # - the Java cache (using key java-${{ github.run_id }}--[JOB_ID]) that brings
 #   Java specific artifacts from the assemble tasks up to tests
-# - the Go cache (using key go-${{ github.run_id }}--[JOB_ID]) that brings
-#   Go specific artifacts from the assemble tasks up to tests
-# - the Docker cache (using key docker-${{ github.run_id }}--[JOB_ID]) that brings
-#   Docker specific artifacts from the assemble tasks up to tests. Since the Docker image needs the
-#   Go binaries this cache is forked from the Go cache after Go build/assemble tasks have completed
 # - the Build cache (using key build-${{ github.run_id }}) that brings all Build
 #   artifacts (but no tests) from the language specific build tasks
 #
@@ -347,7 +342,7 @@ jobs:
     name: Publish
     needs: [ build-merge,java-unit-test ]
     # Run this job only if:
-    # - the Docker, Java or Go files have changed
+    # - the Java files have changed
     # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
     if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
     runs-on: ubuntu-latest
@@ -408,9 +403,9 @@ jobs:
     name: Release
     needs: publish
     # Run this job only if:
-    # - the Docker, Java or Go files have changed
+    # - the Java files have changed
     # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
-    if: needs.init.outputs.dockerChanged == 'true' || needs.init.outputs.goChanged == 'true' || needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
