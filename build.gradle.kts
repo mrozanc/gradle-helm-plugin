@@ -3,6 +3,9 @@ plugins {
     id("com.gradle.plugin-publish") version "1.1.0" apply false
     id("org.jetbrains.dokka") version "1.7.20"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
+    // Handle release and publish
+    // See: https://mooltiverse.github.io/nyx/
+    id("com.mooltiverse.oss.nyx") version "2.3.1"
 }
 
 
@@ -166,4 +169,8 @@ tasks.named("asciidoctor", org.asciidoctor.gradle.jvm.AsciidoctorTask::class) {
             "source-highlighter" to "prettify"
         )
     )
+}
+
+configure<com.mooltiverse.oss.nyx.gradle.NyxExtension> {
+    dryRun.set(System.getenv("CI") != "true")
 }

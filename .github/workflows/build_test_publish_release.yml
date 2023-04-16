@@ -1,0 +1,464 @@
+# The CI pipeline running on GitHub Actions
+#
+# CACHES
+#
+# We use GitHub Actions caches in two different modes:
+# - by mean of actions/cache: we use different caches in order to narrow their size. The major issue
+#   with this kind of cache is that each job can create a new one and store its contents but it cannot
+#   update and store new contents for an existing cache. This is a limitation and since we need to
+#   increment the contents of a cache across several jobs, we need to 'chain' caches so that we can
+#   pull an existing one, change its contents, and then store it under a different name. For this reason
+#   we disambiguate caches with a trailing identifier (represented by the job that stored the cache)
+#   so that each cache 'instance' represents a specific 'stage' within the pipeline for that cache.
+# - by mean of burrunan/gradle-cache-action: this cache also uses actions/cache under the hood but is
+#   specifically optimized for Gradle as it's layered and it hides the complexity of 'chaining' caches
+#   so we define it the same way for each job. This cache leverages Gradle caching to run Gradle tasks
+#   incrementally.
+#   This cache is remote (to GitHub Actions) so jobs running on different workers share it.
+#   See https://docs.gradle.org/current/userguide/build_cache.html for more on the Gradle Build Cache.
+# 
+# Provided the above about 'chaining' caches for specific 'stages', we have several caches, each one
+# containing a specific set of files (the cache scope).
+# The first job that creates a certain cache only defines the cache 'key' and no 'restore-keys'
+# (as there is still no cache to restore) while subsequent ones define a new 'key' (adding the job ID
+# as a trailer in the cache ID) but also uses the 'key' generated for that cache from the job that
+# comes before in the 'chain'.
+#
+# We always create caches with identifiers containing the ${{ github.run_id }} in order to avoid
+# overlappings across multiple pipeline runs.
+#
+# The caches we use in the pipeline are:
+# - the pipeline cache (using key pipeline-${{ github.run_id }}-[JOB_ID]) that brings
+#   some pipeline overall artifacts like the Nyx state
+# - the SonarCloud cache (using key sonar-${{ github.run_id }}-[JOB_ID])
+# - the Java cache (using key java-${{ github.run_id }}--[JOB_ID]) that brings
+#   Java specific artifacts from the assemble tasks up to tests
+# - the Go cache (using key go-${{ github.run_id }}--[JOB_ID]) that brings
+#   Go specific artifacts from the assemble tasks up to tests
+# - the Docker cache (using key docker-${{ github.run_id }}--[JOB_ID]) that brings
+#   Docker specific artifacts from the assemble tasks up to tests. Since the Docker image needs the
+#   Go binaries this cache is forked from the Go cache after Go build/assemble tasks have completed
+# - the Build cache (using key build-${{ github.run_id }}) that brings all Build
+#   artifacts (but no tests) from the language specific build tasks
+#
+# MORE ON CACHES
+# Remember that:
+# - the 'path' items within 'actions/cache' actions must be the same when storing and retrieving the cache
+#   otherwise it won't work
+# - the above rules mean that a certain set of files/directories must always follow the same cache as
+# they can't be mixed up. On the other hand, each job may use/store multiple caches
+
+name: Build, test, publish and release
+on: [ push ]
+# Avoid running multiple pipelines concurrently to avoid overlapping releases and tags
+concurrency:
+  group: project
+  cancel-in-progress: false
+
+jobs:
+  # Initialize the build process and infer the new version number
+  init:
+    name: Initialize
+    outputs:
+      # Make the 'newRelease' outputs from the Nyx action available for other jobs
+      newRelease: ${{ steps.nyx.outputs.newRelease }}
+      # Expose the 'javaChanged' output from the file filters
+      javaChanged: ${{ steps.changes.outputs.javaChanged }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      # Here we set some flags depending on the files that have changed with this commit
+      - name: File filters
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            javaChanged:
+              - '**/src/'
+      - name: Set up JDK LTS
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: 17
+      # Bootstrap (no restore-keys) the pipeline cache and store it as -init
+      # This cache only stores the .nyx-state.json file
+      - name: Set up the pipeline cache bringing the Nyx state
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/
+            **/build/
+          key: pipeline-${{ github.run_id }}-${{ github.job }}
+          #restore-keys: not used here, start from scratch
+      # Bootstrap (no restore-keys) the SonarCloud cache
+      - name: Set up the SonarCloud cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ github.run_id }}-${{ github.job }}
+          #restore-keys: sonar-${{ github.run_id }}-${{ github.job }}
+      # Running the gradle-cache-action with no arguments makes it run just as a remote cache and not as a wrapper
+      - name: Enable the Gradle remote cache
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          # Disable warning about missing distributionSha256Sum property in gradle-wrapper.properties
+          gradle-distribution-sha-256-sum-warning: false
+      # This job only runs nyxInfer to produce the initial version and initializes the Gradle remote cache
+      - name: Init with Gradle
+        run: ./gradlew nyxInfer --build-cache --stacktrace
+      # Run Nyx again (as a GitHub Action) to load the data from the State so that we can export useful job outputs
+      - name: Load Nyx data
+        id: nyx
+        uses: mooltiverse/nyx-github-action@main
+      - name: Archive Nyx state file
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: .nyx-state-${{ github.job }}.json
+          path: build/.nyx-state.json
+
+  ###############################################################################################################################
+  # BUILD
+  # Here we have several parallel jobs to build artifacts, one for each language/tech stack, and in the end one fan in job.
+  ###############################################################################################################################
+
+  build-java:
+    name: Build - Java
+    needs: init
+    # This job is time consuming so only run it if:
+    # - the Java files have changed
+    # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
+    if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 19
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          jdk-version: 17
+      # Start from the -init pipeline cache and save the job output pipeline cache as -build-java
+      - name: Set up the pipeline cache bringing the Nyx state
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/
+          key: pipeline-${{ github.run_id }}-${{ github.job }}
+          restore-keys: |
+            pipeline-${{ github.run_id }}-init
+      # Set up the SonarCloud cache
+      - name: Set up the SonarCloud cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ github.run_id }}-${{ github.job }}
+          restore-keys: sonar-${{ github.run_id }}-${{ github.job }}
+      # Bootstrap (no restore-keys) the Java cache and store it as -build-java
+      - name: Set up the Java cache bringing Java artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/build/
+          key: java-${{ github.run_id }}-${{ github.job }}
+      # Running the gradle-cache-action with no arguments makes it run just as a remote cache and not as a wrapper
+      - name: Enable the Gradle remote cache
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          # Disable warning about missing distributionSha256Sum property in gradle-wrapper.properties
+          gradle-distribution-sha-256-sum-warning: false
+      - name: Assemble with Gradle
+        run: ./gradlew assemble --build-cache --stacktrace
+      #      # @OWS: enable later on
+      #      - name: Scan with SonarCloud
+      #        env:
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #        run: ./gradlew sonar --build-cache --stacktrace --info
+      - name: Archive Nyx state file
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: .nyx-state-${{ github.job }}.json
+          path: build/.nyx-state.json
+      - name: Archive Jar
+        uses: actions/upload-artifact@v3
+        with:
+          name: jar
+          path: '**/build/libs/'
+      - name: Archive Javadoc
+        uses: actions/upload-artifact@v3
+        with:
+          name: javadoc
+          path: '**/build/docs/dokka/javadoc/'
+
+  # This job acts as a connection from upstream jobs running build tasks
+  # Here we import the caches from specific language build jobs into one 
+  build-merge:
+    name: Merge Builds
+    needs: [ build-java ]
+    # This job is time consuming so only run it if:
+    # - the Java files have changed
+    # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
+    if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      # Pull the -build-docker cache (read only). This will be used in the next steps to create a new cache that merges this one and others
+      # This may cause the next one fail as they both restore the same paths
+      #- name: Set up the Go cache bringing Docker artifacts
+      #  uses: actions/cache@v3
+      #  with:
+      #    path: |
+      #      modules/go/**/build/
+      #      ~/.cache/go-build
+      #      ~/go/pkg/mod
+      #    key: docker-${{ github.run_id }}-${{ github.job }}
+      #    restore-keys: |
+      #      docker-${{ github.run_id }}-build-docker
+      # Pull the -build-go cache (read only). This will be used in the next steps to create a new cache that merges this one and others
+      # Pull the -build-java cache (read only). This will be used in the next steps to create a new cache that merges this one and others
+      - name: Set up the Java cache bringing Java artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/build/
+          key: java-${{ github.run_id }}-build-java
+      - name: List contents in the cache
+        run: ls -alR **/build/
+
+  ###############################################################################################################################
+  # TEST
+  # Here we have several parallel jobs to run tests at different maturity levels, progressively, one for each language/tech stack
+  ###############################################################################################################################
+  
+  java-unit-test:
+    name: Test (Unit) - Java ${{ matrix.java }}
+    needs: build-java
+    # This job is time consuming so only run it if:
+    # - the Java files have changed
+    # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
+    if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    # The recommended JDK version is 15 or above but since we need to test for backward compatibility to JVMs 11 or newer we
+    # need a matrix here. Depending on the JDK version the set of Gradle version that the tests run on will change, according
+    # to the Gradle compatibility matrix. See CONTRIBUTING.md in the root directory or the Gradle functional test suites for more.
+    strategy:
+      matrix:
+        java: [ '11', '17' ]
+        gradle-version: [ release-candidate, wrapper ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: ${{ matrix.java }}
+      # Pull the the -init pipeline cache (read only)
+      - name: Set up the pipeline cache bringing the Nyx state
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/
+          key: pipeline-${{ github.run_id }}-build-java
+      # Set up the SonarCloud cache
+      - name: Set up the SonarCloud cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: sonar-${{ github.run_id }}-${{ github.job }}
+          restore-keys: sonar-${{ github.run_id }}-${{ github.job }}
+      # Start from the -build-java cache and save the job output cache as -java-unit-test
+      - name: Set up the Java cache bringing Java artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/build/
+          key: java-${{ github.run_id }}-${{ github.job }}
+          restore-keys: |
+            java-${{ github.run_id }}-build-java
+      # Running the gradle-cache-action with no arguments makes it run just as a remote cache and not as a wrapper
+      - name: Enable the Gradle remote cache
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          # Disable warning about missing distributionSha256Sum property in gradle-wrapper.properties
+          gradle-distribution-sha-256-sum-warning: false
+      - name: Run Java Unit Tests with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: ${{ matrix.gradle-version }}
+          arguments: |
+            test
+            --build-cache
+            --stacktrace
+      #        run: ./gradlew modules:java:test --build-cache --stacktrace
+      - name: Upload code coverage statistics to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          name: Nyx Java unit tests
+          #token: // not required as it's an open source project, but the Codecov App must be installed for the repository (https://github.com/apps/codecov)
+          # @OWS: path
+          files: ./modules/java/main/build/reports/jacoco/test/jacocoTestReport.xml,./modules/java/version/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: java,unit
+          fail_ci_if_error: false # Codecov upload intermittently fails so setting this to false is the only way to avoid it breaking our builds. Codecov's bug is https://github.com/codecov/codecov-action/issues/557
+          verbose: true
+      #      # @OWS: enable later on
+      #      - name: Scan test reports and metrics with SonarCloud
+      #        env:
+      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      #        run: ./gradlew sonar --build-cache --stacktrace --info
+      - name: Archive Nyx state file
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: .nyx-state-${{ github.job }}-${{ matrix.java }}.json
+          path: build/.nyx-state.json
+      - name: Archive Test Outputs
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: java-${{ matrix.java }}-unit-test-reports
+          # @OWS: path
+          path: |
+            modules/java/**/build/jacoco/
+            modules/java/**/build/reports/jacoco
+            modules/java/**/build/reports/tests/test/
+            modules/java/**/build/test-results/test/
+
+  ###############################################################################################################################
+  # FINAL JOBS
+  # Here the serialized jobs to run when all of the above are succesful
+  ###############################################################################################################################
+
+  publish:
+    name: Publish
+    needs: [ build-merge,java-unit-test ]
+    # Run this job only if:
+    # - the Docker, Java or Go files have changed
+    # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
+    if: needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JDK LTS
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: 17
+      # Start from the -init pipeline cache and save the job output pipeline cache as -publish
+      - name: Set up the pipeline cache bringing the Nyx state
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/
+          key: pipeline-${{ github.run_id }}-${{ github.job }}
+          restore-keys: |
+            pipeline-${{ github.run_id }}-init
+      - name: Pull the Build cache bringing artifacts from the upstream Build jobs
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/build/
+          key: build-${{ github.run_id }}
+      # Running the gradle-cache-action with no arguments makes it run just as a remote cache and not as a wrapper
+      - name: Enable the Gradle remote cache
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          # Disable warning about missing distributionSha256Sum property in gradle-wrapper.properties
+          gradle-distribution-sha-256-sum-warning: false
+      - name: Publish with Gradle
+        env:
+          # The 'gitHubUser' and 'gitHubToken' variables are passed as credentials to publish packages to the GitHub Packages repository, see: https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle#publishing-packages-to-github-packages.
+          # The GH_TOKEN is used by Nyx configured service 'github' (see the top level settings.gradle) to publish the release to GitHub Releases.
+          # The 'GITHUB_TOKEN' is automatically generated and provided by GitHub Actions so it doesn't need to be manually created. We just use it and copy as Gradle properties or environment variables.
+          # See:
+          # - the Automatic Token Authentication: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+          # - the 'secrets' Context:  https://docs.github.com/en/actions/learn-github-actions/contexts
+          # - the Default Environment Variables: https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+          # - enabling GITHUB_TOKEN to publish packages: https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#upgrading-a-workflow-that-accesses-ghcrio
+          # See the top level https://github.com/mooltiverse/nyx/blob/main/CONTRIBUTING.md#contributing-code file for details about passing these values when testing locally
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_gitHubUser: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_gradlePublishKey: ${{ secrets.GRADLE_PLUGIN_PUBLISH_KEY }}
+          ORG_GRADLE_PROJECT_gradlePublishSecret: ${{ secrets.GRADLE_PLUGIN_PUBLISH_SECRET }}
+        run: ./gradlew nyxMake nyxMark nyxPublish publish --build-cache --stacktrace
+      - name: Archive Nyx state file
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: .nyx-state-${{ github.job }}.json
+          path: build/.nyx-state.json
+
+  release:
+    name: Release
+    needs: publish
+    # Run this job only if:
+    # - the Docker, Java or Go files have changed
+    # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
+    if: needs.init.outputs.dockerChanged == 'true' || needs.init.outputs.goChanged == 'true' || needs.init.outputs.javaChanged == 'true' || needs.init.outputs.newRelease == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up JDK LTS
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: 17
+      # Start from the -publish pipeline cache and save the job output pipeline cache as -release
+      - name: Set up the pipeline cache bringing the Nyx state
+        uses: actions/cache@v3
+        with:
+          path: |
+            build/
+          key: pipeline-${{ github.run_id }}-${{ github.job }}
+          restore-keys: |
+            pipeline-${{ github.run_id }}-publish
+      - name: Pull the Build cache bringing artifacts from the upstream Build jobs
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/build/
+          key: build-${{ github.run_id }}-${{ github.job }}
+      # Running the gradle-cache-action with no arguments makes it run just as a remote cache and not as a wrapper
+      - name: Enable the Gradle remote cache
+        uses: burrunan/gradle-cache-action@v1
+        with:
+          # Disable warning about missing distributionSha256Sum property in gradle-wrapper.properties
+          gradle-distribution-sha-256-sum-warning: false
+      - name: Release with Gradle
+        env:
+          # The 'gitHubUser' and 'gitHubToken' variables are passed as credentials to publish packages to the GitHub Packages repository, see: https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-gradle#publishing-packages-to-github-packages.
+          # The GH_TOKEN is used by Nyx configured service 'github' (see the top level settings.gradle) to publish the release to GitHub Releases.
+          # The 'GITHUB_TOKEN' is automatically generated and provided by GitHub Actions so it doesn't need to be manually created. We just use it and copy as Gradle properties or environment variables.
+          # See:
+          # - the Automatic Token Authentication: https://docs.github.com/en/actions/security-guides/automatic-token-authentication
+          # - the 'secrets' Context:  https://docs.github.com/en/actions/learn-github-actions/contexts
+          # - the Default Environment Variables: https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
+          # - GITHUB_TOKEN permissions for repository: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#setting-the-permissions-of-the-github_token-for-your-repository
+          # See the top level https://github.com/mooltiverse/nyx/blob/main/CONTRIBUTING.md#contributing-code file for details about passing these values when testing locally
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG_GRADLE_PROJECT_gitHubUser: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew release --build-cache --stacktrace
+      - name: Archive Nyx state file
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: .nyx-state-${{ github.job }}.json
+          path: build/.nyx-state.json
