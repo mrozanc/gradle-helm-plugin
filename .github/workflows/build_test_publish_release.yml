@@ -82,7 +82,7 @@ jobs:
           distribution: 'liberica'
           java-version-file: .java-version
       # Bootstrap (no restore-keys) the pipeline cache and store it as -init
-      # This cache only stores the .nyx-state.json file
+      # This cache only stores the .nyx-state.yml file
       - name: Set up the pipeline cache bringing the Nyx state
         uses: actions/cache@v3
         with:
@@ -116,7 +116,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: .nyx-state-${{ github.job }}.json
-          path: build/.nyx-state.json
+          path: build/.nyx-state.yml
 
   ###############################################################################################################################
   # BUILD
@@ -183,7 +183,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: .nyx-state-${{ github.job }}.json
-          path: build/.nyx-state.json
+          path: build/.nyx-state.yml
       - name: Archive Jar
         uses: actions/upload-artifact@v3
         with:
@@ -320,7 +320,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: .nyx-state-${{ github.job }}-${{ matrix.java }}.json
-          path: build/.nyx-state.json
+          path: build/.nyx-state.yml
       - name: Archive Test Outputs
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -400,7 +400,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: .nyx-state-${{ github.job }}.json
-          path: build/.nyx-state.json
+          path: build/.nyx-state.yml
 
   release:
     name: Release
@@ -464,4 +464,4 @@ jobs:
         if: ${{ always() }}
         with:
           name: .nyx-state-${{ github.job }}.json
-          path: build/.nyx-state.json
+          path: build/.nyx-state.yml
