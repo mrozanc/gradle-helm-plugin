@@ -139,11 +139,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up JDK 19
+      - name: Set up JDK LTS
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          jdk-version: 17
+          java-version: 17
       # Start from the -init pipeline cache and save the job output pipeline cache as -build-java
       - name: Set up the pipeline cache bringing the Nyx state
         uses: actions/cache@v3
