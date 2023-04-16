@@ -147,6 +147,13 @@ dependencies {
     asciidoctorExt("com.bmuschko:asciidoctorj-tabbed-code-extension:0.3")
 }
 
+/*------------------------------------------------------------------------------
+    Extension configurations
+------------------------------------------------------------------------------*/
+
+configure<com.mooltiverse.oss.nyx.gradle.NyxExtension> {
+    dryRun.set(System.getenv("CI") != "true")
+}
 
 tasks.named("asciidoctor", org.asciidoctor.gradle.jvm.AsciidoctorTask::class) {
 
@@ -169,8 +176,4 @@ tasks.named("asciidoctor", org.asciidoctor.gradle.jvm.AsciidoctorTask::class) {
             "source-highlighter" to "prettify"
         )
     )
-}
-
-configure<com.mooltiverse.oss.nyx.gradle.NyxExtension> {
-    dryRun.set(System.getenv("CI") != "true")
 }
