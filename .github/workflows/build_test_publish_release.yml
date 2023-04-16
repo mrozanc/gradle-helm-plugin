@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          java-version: 17
+          java-version-file: .java-version
       # Bootstrap (no restore-keys) the pipeline cache and store it as -init
       # This cache only stores the .nyx-state.json file
       - name: Set up the pipeline cache bringing the Nyx state
@@ -143,7 +143,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          java-version: 17
+          java-version-file: .java-version
       # Start from the -init pipeline cache and save the job output pipeline cache as -build-java
       - name: Set up the pipeline cache bringing the Nyx state
         uses: actions/cache@v3
@@ -358,7 +358,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          java-version: 17
+          java-version-file: .java-version
       # Start from the -init pipeline cache and save the job output pipeline cache as -publish
       - name: Set up the pipeline cache bringing the Nyx state
         uses: actions/cache@v3
@@ -396,7 +396,7 @@ jobs:
           ORG_GRADLE_PROJECT_gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PLUGIN_PUBLISH_SECRET }}
-        run: ./gradlew nyxMake nyxMark nyxPublish publish --build-cache --stacktrace
+        run: ./gradlew nyxMake nyxMark nyxPublish publishPlugins --build-cache --stacktrace
       - name: Archive Nyx state file
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
@@ -421,7 +421,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'liberica'
-          java-version: 17
+          java-version-file: .java-version
       # Start from the -publish pipeline cache and save the job output pipeline cache as -release
       - name: Set up the pipeline cache bringing the Nyx state
         uses: actions/cache@v3
