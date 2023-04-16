@@ -238,7 +238,7 @@ jobs:
   ###############################################################################################################################
   
   java-unit-test:
-    name: Test (Unit) - Java ${{ matrix.java }}
+    name: Test (Unit) - Java ${{ matrix.java }} - Gradle ${{ matrix.gradle-version }}
     needs: build-java
     # This job is time consuming so only run it if:
     # - the Java files have changed
@@ -249,7 +249,7 @@ jobs:
     # to the Gradle compatibility matrix. See CONTRIBUTING.md in the root directory or the Gradle functional test suites for more.
     strategy:
       matrix:
-        java: [ '11', '17' ]
+        java: [ '17' ]
         gradle-version: [ release-candidate, wrapper ]
     runs-on: ubuntu-latest
     steps:
@@ -293,6 +293,8 @@ jobs:
           gradle-distribution-sha-256-sum-warning: false
       - name: Run Java Unit Tests with Gradle
         uses: gradle/gradle-build-action@v2
+        env:
+          JDK_VERSION: ${{ matrix.java }}
         with:
           gradle-version: ${{ matrix.gradle-version }}
           arguments: |
