@@ -44,7 +44,7 @@
 # they can't be mixed up. On the other hand, each job may use/store multiple caches
 
 name: Build, test, publish and release
-on: [ push ]
+on: [ push, workflow_dispatch ]
 
 
 # Avoid running multiple pipelines concurrently to avoid overlapping releases and tags
@@ -391,7 +391,7 @@ jobs:
           # - the Default Environment Variables: https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
           # - enabling GITHUB_TOKEN to publish packages: https://docs.github.com/en/packages/managing-github-packages-using-github-actions-workflows/publishing-and-installing-a-package-with-github-actions#upgrading-a-workflow-that-accesses-ghcrio
           # See the top level https://github.com/mooltiverse/nyx/blob/main/CONTRIBUTING.md#contributing-code file for details about passing these values when testing locally
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_PUBLISH_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PLUGIN_PUBLISH_SECRET }}
         run: ./gradlew nyxMake nyxMark nyxPublish publishPlugins --build-cache --stacktrace
@@ -455,7 +455,7 @@ jobs:
           # - the Default Environment Variables: https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
           # - GITHUB_TOKEN permissions for repository: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#setting-the-permissions-of-the-github_token-for-your-repository
           # See the top level https://github.com/mooltiverse/nyx/blob/main/CONTRIBUTING.md#contributing-code file for details about passing these values when testing locally
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ORG_GRADLE_PROJECT_gitHubUser: ${{ github.actor }}
           ORG_GRADLE_PROJECT_gitHubToken: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew release --build-cache --stacktrace

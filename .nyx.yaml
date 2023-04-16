@@ -26,12 +26,6 @@ commitMessageConventions:
         major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
         minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
         patch: "(?s)(?m)^fix(?!!|.*^(BREAKING( |-)CHANGE: )).*"
-git:
-  remotes:
-    origin:
-      authenticationMethod: USER_PASSWORD
-      user: "{{#environmentVariable}}GH_TOKEN{{/environmentVariable}}"
-      password: ""
 changelog:
   path: "build/CHANGELOG.md"
   template: ".github/CHANGELOG.tpl"
@@ -43,42 +37,122 @@ changelog:
 releaseTypes:
   enabled:
     - mainline
+    - maturity
+    - integration
+    - hotfix
+    - feature
+    - release
+    - maintenance
     - internal
   publicationServices:
     - github
-  remoteRepositories:
-    - origin
   items:
     mainline:
       collapseVersions: false
-      filterTags: "^()?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
-      gitCommit: "true"
-      gitCommitMessage: "Release version "
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "false"
+      gitCommitMessage: "Release version {{version}}"
       gitPush: "true"
       gitTag: "true"
-      gitTagMessage: "Tag release "
-      matchBranches: "^(master|main)$"
+      gitTagMessage: "Tag version {{version}}"
+      matchBranches: ^(master|main)$
       matchEnvironmentVariables:
         CI: "^true$"
       matchWorkspaceStatus: "CLEAN"
       publish: "true"
       versionRangeFromBranchName: false
-    internal:
+    maturity:
+      collapseVersions: true
+      collapsedVersionQualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+      description: "Maturity release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)(-(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)(\\.([0-9]\\d*))?)?$"
+      gitCommit: "false"
+      gitPush: "true"
+      gitTag: "true"
+      matchBranches: "^(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega)$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+      versionRangeFromBranchName: false
+    integration:
+      assets:
+      collapseVersions: true
+      collapsedVersionQualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+      description: "Integration release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)(-(develop|development|integration|latest)(\\.([0-9]\\d*))?)$"
+      gitCommit: "false"
+      gitPush: "true"
+      gitTag: "true"
+      matchBranches: "^(develop|development|integration|latest)$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+      versionRangeFromBranchName: false
+    hotfix:
+      assets:
+      collapseVersions: true
+      collapsedVersionQualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+      description: "Hotfix release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)(-(fix|hotfix)(([0-9a-zA-Z]*)(\\.([0-9]\\d*))?)?)$"
+      gitCommit: "false"
+      gitPush: "true"
+      gitTag: "true"
+      matchBranches: "^(fix|hotfix)((-|\\/)[0-9a-zA-Z-_]+)?$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+      versionRangeFromBranchName: false
+    feature:
+      collapseVersions: true
+      collapsedVersionQualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+      description: "Feature release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)(-(feat|feature)(([0-9a-zA-Z]*)(\\.([0-9]\\d*))?)?)$"
+      gitCommit: "false"
+      gitPush: "false"
+      gitTag: "false"
+      matchBranches: "^(feat|feature)((-|\\/)[0-9a-zA-Z-_]+)?$"
+      publish: "false"
+      versionRangeFromBranchName: false
+    release:
+      collapseVersions: true
+      collapsedVersionQualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
+      description: "Release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)(-(rel|release)((\\.([0-9]\\d*))?)?)$"
+      gitCommit: "false"
+      gitPush: "true"
+      gitTag: "true"
+      matchBranches: "^(rel|release)(-|\\/)({{configuration.releasePrefix}})?([0-9|x]\\d*)(\\.([0-9|x]\\d*)(\\.([0-9|x]\\d*))?)?$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "false"
+      versionRangeFromBranchName: true
+    maintenance:
       collapseVersions: false
+      description: "Maintenance release {{version}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "false"
+      gitPush: "true"
+      gitTag: "true"
+      matchBranches: "^[a-zA-Z]*([0-9|x]\\d*)(\\.([0-9|x]\\d*)(\\.([0-9|x]\\d*))?)?$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+      versionRangeFromBranchName: true
+    internal:
+      collapseVersions: true
       collapsedVersionQualifier: "internal"
-      description: "Internal release "
-      filterTags: "^()?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      description: "Internal release {{version}}"
       gitCommit: "false"
       gitPush: "false"
       gitTag: "false"
       identifiers:
-        - qualifier: "{{#sanitizeLower}}{{branch}}{{/sanitizeLower}}"
-          position: "BUILD"
-        - qualifier: "{{#short5}}{{releaseScope.finalCommit}}{{/short5}}"
-          position: "BUILD"
-        - qualifier: "{{#timestampYYYYMMDDHHMMSS}}{{timestamp}}{{/timestampYYYYMMDDHHMMSS}}"
-          position: "BUILD"
-          value: ""
+        - position: BUILD
+          qualifier: branch
+          value: "{{#sanitize}}{{branch}}{{/sanitize}}"
+        - position: BUILD
+          qualifier: commit
+          value: "{{#short7}}{{releaseScope.finalCommit}}{{/short7}}"
+        - position: BUILD
+          qualifier: timestamp
+          value: "{{#timestampYYYYMMDDHHMMSS}}{{timestamp}}{{/timestampYYYYMMDDHHMMSS}}"
+        - position: BUILD
+          qualifier: user
+          value: "{{#sanitizeLower}}{{environmentUser}}{{/sanitizeLower}}"
       publish: "false"
       versionRangeFromBranchName: false
 scheme: "SEMVER"
