@@ -46,6 +46,8 @@ releaseTypes:
     - internal
   publicationServices:
     - github
+  remoteRepositories:
+    - origin
   items:
     mainline:
       collapseVersions: false
