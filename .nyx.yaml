@@ -39,7 +39,7 @@ changelog:
     "Added": "^feat$"
     "Fixed": "^fix$"
   substitutions:
-    "(?m)#([0-9]+)(?s)": "[#%s](https://github.com/mehmetsalgar/gradle-helm-plugin/issues/%s)"
+    "(?m)#([0-9]+)(?s)": "[#%s](https://github.com/bullshit/gradle-helmng-plugin/issues/%s)"
 releaseTypes:
   enabled:
     - mainline
