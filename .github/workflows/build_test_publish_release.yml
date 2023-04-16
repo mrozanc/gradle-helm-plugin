@@ -341,6 +341,9 @@ jobs:
   publish:
     name: Publish
     needs: [ build-merge,java-unit-test ]
+    permissions:
+      contents: read
+      packages: write
     # Run this job only if:
     # - the Java files have changed
     # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
@@ -402,6 +405,9 @@ jobs:
   release:
     name: Release
     needs: publish
+    permissions:
+      contents: read
+      packages: write
     # Run this job only if:
     # - the Java files have changed
     # - a new release must be issued (this flag is inferred by Nyx), in which case we rebuild and test everything
