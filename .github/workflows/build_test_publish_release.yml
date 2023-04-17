@@ -115,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: .nyx-state-${{ github.job }}.json
+          name: .nyx-state-${{ github.job }}.yml
           path: build/.nyx-state.yml
 
   ###############################################################################################################################
@@ -182,7 +182,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: .nyx-state-${{ github.job }}.json
+          name: .nyx-state-${{ github.job }}.yml
           path: build/.nyx-state.yml
       - name: Archive Jar
         uses: actions/upload-artifact@v3
@@ -399,7 +399,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: .nyx-state-${{ github.job }}.json
+          name: .nyx-state-${{ github.job }}.yml
           path: build/.nyx-state.yml
 
   release:
@@ -463,5 +463,5 @@ jobs:
         uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
-          name: .nyx-state-${{ github.job }}.json
+          name: .nyx-state-${{ github.job }}.yml
           path: build/.nyx-state.yml
