@@ -16,7 +16,9 @@ allprojects {
 }
 
 subprojects {
-
+    afterEvaluate {
+        version = rootProject.version
+    }
     plugins.withType<JavaGradlePluginPlugin> {
         dependencies {
             "compileOnly"(kotlin("stdlib-jdk8"))
@@ -156,9 +158,7 @@ configure<com.mooltiverse.oss.nyx.gradle.NyxExtension> {
 }
 
 subprojects {
-    afterEvaluate {
-        version = rootProject.version
-    }
+    version = rootProject
 }
 
 tasks.named("asciidoctor", org.asciidoctor.gradle.jvm.AsciidoctorTask::class) {
