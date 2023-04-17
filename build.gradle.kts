@@ -155,6 +155,12 @@ configure<com.mooltiverse.oss.nyx.gradle.NyxExtension> {
     dryRun.set(System.getenv("CI") != "true")
 }
 
+subprojects {
+    afterEvaluate {
+        version = rootProject.version
+    }
+}
+
 tasks.named("asciidoctor", org.asciidoctor.gradle.jvm.AsciidoctorTask::class) {
 
     sourceDir("docs")
