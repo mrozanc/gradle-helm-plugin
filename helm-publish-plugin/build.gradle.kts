@@ -30,7 +30,7 @@ gradlePlugin {
 
     plugins {
         create("helmPublishPlugin") {
-            id = "org.unbroken-dome.helm-publish"
+            id = "fr.rozanc.helm-publish"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.publishing.HelmPublishPlugin"
         }
     }

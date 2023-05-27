@@ -20,7 +20,7 @@ Apply the `helm-publish` plugin to your project:
 .Groovy
 ----
 plugins {
-    id 'org.unbroken-dome.helm-publish' version '{project-version}'
+    id 'fr.rozanc.helm-publish' version '{project-version}'
 }
 ----
 
@@ -28,7 +28,7 @@ plugins {
 .Kotlin
 ----
 plugins {
-    id("org.unbroken-dome.helm-publish") version "{project-version}"
+    id("fr.rozanc.helm-publish") version "{project-version}"
 }
 ----
 

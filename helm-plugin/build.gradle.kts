@@ -28,11 +28,11 @@ gradlePlugin {
 
     plugins {
         create("helmCommandsPlugin") {
-            id = "org.unbroken-dome.helm-commands"
+            id = "fr.rozanc.helm-commands"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.command.HelmCommandsPlugin"
         }
         create("helmPlugin") {
-            id = "org.unbroken-dome.helm"
+            id = "fr.rozanc.helm"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
         }
     }
