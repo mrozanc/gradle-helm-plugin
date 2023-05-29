@@ -12,6 +12,7 @@ import org.unbrokendome.gradle.pluginutils.fileProviderFromProjectProperty
 import org.unbrokendome.gradle.pluginutils.property
 import org.unbrokendome.gradle.pluginutils.providerFromProjectProperty
 import org.unbrokendome.gradle.pluginutils.withDefault
+import java.util.*
 
 
 /**
@@ -55,7 +56,7 @@ open class HelmStatus : AbstractHelmServerCommandTask() {
      * of the output file name.
      */
     private val formatBasedOnOutputFile: Provider<String> = outputFile.asFile.flatMap { outputFile ->
-        val value: String? = when (outputFile.extension.toLowerCase()) {
+        val value: String? = when (outputFile.extension.lowercase()) {
             "json" -> "json"
             "yaml", "yml" -> "yaml"
             else -> null

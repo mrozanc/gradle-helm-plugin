@@ -1,6 +1,7 @@
 package org.unbrokendome.gradle.plugins.helm.dsl.dependencies
 
 import org.gradle.api.artifacts.Configuration
+import java.util.*
 
 
 /**
@@ -10,5 +11,5 @@ import org.gradle.api.artifacts.Configuration
  * @return the name of the chart's dependencies configuration
  */
 internal fun chartDependenciesConfigurationName(name: String) =
-    "helm${name.capitalize()}Dependencies"
+    "helm${name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }}Dependencies"
 

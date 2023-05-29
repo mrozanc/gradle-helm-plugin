@@ -6,7 +6,6 @@ import groovy.lang.DelegatesTo
 import org.gradle.api.Action
 import org.gradle.api.credentials.Credentials
 import org.gradle.api.provider.Provider
-import org.gradle.util.ConfigureUtil
 import kotlin.reflect.KClass
 
 
@@ -107,12 +106,14 @@ interface CredentialsContainer {
      * @throws IllegalArgumentException if `type` is of a different type to the credentials previously
      *         specified for this repository
      */
-    @JvmDefault
     fun <T : Credentials> credentials(
         @DelegatesTo.Target type: Class<T>,
         @DelegatesTo(strategy = DELEGATE_FIRST, genericTypeIndex = 0) configClosure: Closure<*>
     ) {
-        credentials(type, ConfigureUtil.configureUsing(configClosure))
+        credentials(type) {
+            configClosure.delegate = it
+            configClosure.call()
+        }
     }
 
 
@@ -155,11 +156,13 @@ interface CredentialsContainer {
      * @throws IllegalStateException when the credentials assigned to this service are not of
      *         type [PasswordCredentials]
      */
-    @JvmDefault
     fun credentials(
         @DelegatesTo(PasswordCredentials::class, strategy = DELEGATE_FIRST) configClosure: Closure<*>
     ) {
-        credentials(ConfigureUtil.configureUsing(configClosure))
+        credentials(Action {
+            configClosure.delegate = it
+            configClosure.call()
+        })
     }
 
 

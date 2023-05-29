@@ -8,13 +8,15 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
-import org.gradle.util.GFileUtils
 import org.unbrokendome.gradle.plugins.helm.command.ConfigurableHelmValueOptions
 import org.unbrokendome.gradle.plugins.helm.command.HelmExecProviderSupport
 import org.unbrokendome.gradle.plugins.helm.command.internal.HelmValueOptionsApplier
 import org.unbrokendome.gradle.plugins.helm.command.internal.HelmValueOptionsHolder
 import org.unbrokendome.gradle.pluginutils.ifPresent
 import org.unbrokendome.gradle.pluginutils.property
+import java.nio.file.Files
+import java.nio.file.attribute.FileTime
+import java.time.Instant
 
 
 /**
@@ -120,7 +122,11 @@ open class HelmLint : AbstractHelmCommandTask(), ConfigurableHelmValueOptions {
         }
 
         outputMarkerFile.ifPresent {
-            GFileUtils.touch(it.asFile)
+            try {
+                Files.createFile(it.asFile.toPath())
+            } catch (e: FileAlreadyExistsException) {
+                Files.setLastModifiedTime(it.asFile.toPath(), FileTime.from(Instant.now()))
+            }
         }
     }
 
