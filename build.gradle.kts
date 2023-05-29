@@ -48,8 +48,6 @@ subprojects {
             "testImplementation"(kotlin("stdlib-jdk8"))
             "testImplementation"(kotlin("reflect"))
 
-            "testImplementation"("io.kotest:kotest-assertions-core:5.6.2")
-            "testImplementation"("io.kotest:kotest-runner-junit5:5.6.2")
             "testImplementation"("com.willowtreeapps.assertk:assertk-jvm:0.26.1")
             "testImplementation"("io.mockk:mockk:1.13.5")
             "testImplementation"("org.spekframework.spek2:spek-dsl-jvm:2.0.19")
