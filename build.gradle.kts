@@ -1,8 +1,8 @@
 plugins {
     kotlin("jvm") apply false
-    id("com.gradle.plugin-publish") version "0.21.0" apply false
-    id("org.jetbrains.dokka") version "1.4.32"
-    id("org.asciidoctor.jvm.convert") version "3.2.0"
+    id("com.gradle.plugin-publish") version "1.2.0" apply false
+    id("org.jetbrains.dokka") version "1.8.10"
+    id("org.asciidoctor.jvm.convert") version "3.3.2"
 }
 
 
@@ -48,10 +48,12 @@ subprojects {
             "testImplementation"(kotlin("stdlib-jdk8"))
             "testImplementation"(kotlin("reflect"))
 
-            "testImplementation"("com.willowtreeapps.assertk:assertk-jvm:0.23")
-            "testImplementation"("io.mockk:mockk:1.10.0")
-            "testImplementation"("org.spekframework.spek2:spek-dsl-jvm:2.0.9")
-            "testRuntimeOnly"("org.spekframework.spek2:spek-runner-junit5:2.0.9")
+            "testImplementation"("io.kotest:kotest-assertions-core:5.6.2")
+            "testImplementation"("io.kotest:kotest-runner-junit5:5.6.2")
+            "testImplementation"("com.willowtreeapps.assertk:assertk-jvm:0.26.1")
+            "testImplementation"("io.mockk:mockk:1.13.5")
+            "testImplementation"("org.spekframework.spek2:spek-dsl-jvm:2.0.19")
+            "testRuntimeOnly"("org.spekframework.spek2:spek-runner-junit5:2.0.19")
         }
 
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -84,7 +86,7 @@ subprojects {
     plugins.withId("org.jetbrains.dokka") {
 
         dependencies {
-            "dokkaJavadocPlugin"("org.jetbrains.dokka:kotlin-as-java-plugin:1.4.32")
+            "dokkaJavadocPlugin"("org.jetbrains.dokka:kotlin-as-java-plugin:1.8.10")
         }
 
         tasks.withType<Jar>().matching { it.name == "javadocJar" || it.name == "publishPluginJavaDocsJar" }
@@ -127,16 +129,16 @@ subprojects {
     }
 
 
-    plugins.withId("com.gradle.plugin-publish") {
+    pluginManager.withPlugin("com.gradle.plugin-publish") {
 
         val githubUrl = project.extra["github.url"] as String
-
-        with(the<com.gradle.publish.PluginBundleExtension>()) {
-
-            website = githubUrl
-            vcsUrl = githubUrl
+        project.extensions.getByType<GradlePluginDevelopmentExtension>().apply {
+            website.set(githubUrl)
+            vcsUrl.set(githubUrl)
             description = "A suite of Gradle plugins for building, publishing and managing Helm charts."
-            tags = listOf("helm")
+            plugins.configureEach {
+                tags.add("helm")
+            }
         }
     }
 }

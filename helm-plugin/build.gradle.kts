@@ -29,23 +29,13 @@ gradlePlugin {
     plugins {
         create("helmCommandsPlugin") {
             id = "fr.rozanc.helm-commands"
+            displayName = "Helm Commands plugin"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.command.HelmCommandsPlugin"
         }
         create("helmPlugin") {
             id = "fr.rozanc.helm"
-            implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
-        }
-    }
-}
-
-
-pluginBundle {
-    (plugins) {
-        "helmCommandsPlugin" {
-            displayName = "Helm Commands plugin"
-        }
-        "helmPlugin" {
             displayName = "Helm plugin"
+            implementationClass = "org.unbrokendome.gradle.plugins.helm.HelmPlugin"
         }
     }
 }
