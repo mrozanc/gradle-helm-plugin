@@ -41,14 +41,13 @@ private class DefaultExecMockServer : ExecMockServer, AutoCloseable {
         override fun getShellScript(): String =
             """
             |#!/bin/bash
-            |set -xv
             |PAYLOAD="{\
             |\"executable\":\"$0\",\
             |\"mockId\": \"$id\",\
             |\"args\":[$(for arg in "$@"; do echo "\"$(echo ${'$'}arg | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')\""; done | paste -sd ',' -)],\
-            |\"env\":{$(env | awk -F '=' '{print "\"" $1 "\":\"" $2 "\""}' | paste -sd',' -)}}"
+            |\"env\":{$(env | grep -v '"' | awk -F '=' '{print "\"" $1 "\":\"" $2 "\""}' | paste -sd',' -)}}"
             |
-            |exec curl -vvvvv -fqs http://localhost:${portNumber} --data-ascii "${'$'}PAYLOAD"
+            |exec curl -fqs http://localhost:${portNumber} --data-ascii "${'$'}PAYLOAD"
             """.trimMargin()
 
 
