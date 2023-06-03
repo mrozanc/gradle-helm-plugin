@@ -22,6 +22,7 @@ gradlePlugin {
         create("helmReleasesPlugin") {
             id = "fr.rozanc.helm-releases"
             displayName = "Helm Releases Plugin"
+            description = "Helm Releases Plugin"
             implementationClass = "org.unbrokendome.gradle.plugins.helm.release.HelmReleasesPlugin"
         }
     }
