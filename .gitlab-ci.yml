@@ -1,4 +1,4 @@
-image: registry.git.rzc.fr/marc/docker-images/java-builder:latest
+image: registry.git.rzc.fr/marc/docker-images/java-builder-8:latest
 
 stages:
   - "build"
