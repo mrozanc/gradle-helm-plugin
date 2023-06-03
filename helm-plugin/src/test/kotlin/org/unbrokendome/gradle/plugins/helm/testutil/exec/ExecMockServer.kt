@@ -40,7 +40,8 @@ private class DefaultExecMockServer : ExecMockServer, AutoCloseable {
 
         override fun getShellScript(): String =
             """
-            |#!/bin/bash 
+            |#!/bin/bash
+            |set -xv
             |PAYLOAD="{\
             |\"executable\":\"$0\",\
             |\"mockId\": \"$id\",\

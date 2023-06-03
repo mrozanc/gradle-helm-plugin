@@ -1,13 +1,9 @@
-image: maven:3.9.2-eclipse-temurin-8
+image: registry.git.rzc.fr/marc/docker-images/java-builder:latest
 
 stages:
   - "build"
   - "test"
   - "publish"
-
-before_script:
-  - GRADLE_USER_HOME="$(pwd)/.gradle"
-  - export GRADLE_USER_HOME
 
 build:
   stage: build
@@ -17,7 +13,7 @@ build:
       policy: push
       paths:
         - "**/build"
-        - .gradle
+        - /home/builder/.gradle
 
 test:
   stage: test
@@ -30,7 +26,7 @@ test:
     - key: "$CI_COMMIT_REF_NAME"
       paths:
         - "**/build"
-        - .gradle
+        - /home/builder/.gradle
 
 publish:
   stage: publish
@@ -39,4 +35,4 @@ publish:
     - key: "$CI_COMMIT_REF_NAME"
       paths:
         - "**/build"
-        - .gradle
+        - /home/builder/.gradle
