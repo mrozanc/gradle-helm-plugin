@@ -48,7 +48,7 @@ private class DefaultExecMockServer : ExecMockServer, AutoCloseable {
             |\"args\":[$(for arg in "$@"; do echo "\"$(echo ${'$'}arg | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')\""; done | paste -sd ',' -)],\
             |\"env\":{$(env | awk -F '=' '{print "\"" $1 "\":\"" $2 "\""}' | paste -sd',' -)}}"
             |
-            |exec curl -fqs http://localhost:${portNumber} --data-ascii "${'$'}PAYLOAD"
+            |exec curl -vvvvv -fqs http://localhost:${portNumber} --data-ascii "${'$'}PAYLOAD"
             """.trimMargin()
 
 
