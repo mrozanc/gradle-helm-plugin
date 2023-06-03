@@ -10,7 +10,7 @@ endif::[]
 :version: 1.0.0
 :pluginId: fr.rozanc.helm
 
-image:https://img.shields.io/gradle-plugin-portal/v/{pluginId}?versionPrefix={version}[link=https://plugins.gradle.org/plugin/{pluginId}/{version}]
+NOTE: This project is a fork from the original https://github.com/unbroken-dome/gradle-helm-plugin[Unbroken Dome Helm project] which is no longer maintained. It provides a compatibility with Gradle 8+ and updated dependencies. Compared to other forks, it remains compatible with JDK 8.
 
 This is a suite of Gradle plugins for building, publishing and managing https://www.helm.sh/[Helm] charts.
 
